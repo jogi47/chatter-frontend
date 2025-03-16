@@ -39,22 +39,27 @@ export default function ChatPage() {
   useEffect(() => {
     // Handle incoming messages
     const handleGroupMessage = (data: any) => {
-      if (data.groupId === groupId) {
+      if (data.groupId === groupId && data.message.user_id !== user?.id) {
+        console.log(`${data.message} beingcalled....`);
         setMessages(prev => [...prev, data.message]);
       }
     };
-
     socketService.onGroupMessage(handleGroupMessage);
 
+    // Cleanup function
     return () => {
-      // Emit leave group event when component unmounts
-      // socketService.emit({
-      //   event: 'leaveGroup',
-      //   data: { groupId }
-      // });
-      // socketService.offGroupMessage(handleGroupMessage);
+      socketService.offGroupMessage(handleGroupMessage);
+      
+      // Only emit leaveGroup if we're actually leaving the page
+      // not just when the effect re-runs
+      if (typeof window !== 'undefined' && window.location.pathname !== `/chat/${groupId}`) {
+        socketService.emit({
+          event: 'leaveGroup',
+          data: { groupId }
+        });
+      }
     };
-  }, [groupId]);
+  }, [groupId, user?.id]); // Add user?.id as dependency
 
   const fetchGroupAndMessages = async () => {
     try {
