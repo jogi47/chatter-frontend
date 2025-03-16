@@ -8,7 +8,7 @@ import { useAppStore } from '@/app/store/store';
 import { useToast } from '@/components/ui/toast-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut } from 'lucide-react';
+import { LogOut, Plus } from 'lucide-react';
 import { socketService } from '@/lib/services/socket';
 
 export default function HomePage() {
@@ -84,12 +84,20 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-gray-900/75">
         <h1 className="text-xl font-semibold text-gray-100">Groups</h1>
-        <button
-          onClick={handleLogout}
-          className="rounded-full p-2 text-gray-400 hover:bg-gray-800 hover:text-gray-100"
-        >
-          <LogOut className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/create-group')}
+            className="rounded-full p-2 text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+          >
+            <Plus className="h-5 w-5" />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="rounded-full p-2 text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
