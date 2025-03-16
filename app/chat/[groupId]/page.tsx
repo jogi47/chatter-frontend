@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send } from 'lucide-react';
 import { format } from 'date-fns';
+import { socketService } from '@/lib/services/socket';
 
 export default function ChatPage() {
   const params = useParams();
@@ -34,6 +35,26 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Handle incoming messages
+    const handleGroupMessage = (data: any) => {
+      if (data.groupId === groupId) {
+        setMessages(prev => [...prev, data.message]);
+      }
+    };
+
+    socketService.onGroupMessage(handleGroupMessage);
+
+    return () => {
+      // Emit leave group event when component unmounts
+      // socketService.emit({
+      //   event: 'leaveGroup',
+      //   data: { groupId }
+      // });
+      // socketService.offGroupMessage(handleGroupMessage);
+    };
+  }, [groupId]);
 
   const fetchGroupAndMessages = async () => {
     try {
@@ -78,9 +99,20 @@ export default function ChatPage() {
 
     try {
       setIsSending(true);
+      
+      // Send message through REST API
       const response = await messageService.sendTextMessage({
         group_id: groupId,
         content: newMessage.trim(),
+      });
+
+      // Emit socket event
+      socketService.emit({
+        event: 'groupMessage',
+        data: {
+          groupId,
+          message: response,
+        }
       });
 
       setMessages(prev => [...prev, response]);

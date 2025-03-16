@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/toast-context';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LogOut } from 'lucide-react';
+import { socketService } from '@/lib/services/socket';
 
 export default function HomePage() {
   const router = useRouter();
@@ -20,6 +21,10 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchGroups();
+    socketService.initialize();
+    return () => {
+      // socketService.disconnect();
+    };
   }, []);
 
   const fetchGroups = async () => {
@@ -47,9 +52,17 @@ export default function HomePage() {
     router.push('/');
   };
 
+  const handleGroupClick = (groupId: string) => {
+    socketService.emit({
+      event: 'joinGroup',
+      data: { groupId }
+    });
+    router.push(`/chat/${groupId}`);
+  };
+
   const GroupCard = ({ group }: { group: Group }) => (
     <div 
-      onClick={() => router.push(`/chat/${group._id}`)}
+      onClick={() => handleGroupClick(group._id)}
       className="flex items-center space-x-4 rounded-lg border border-gray-800/10 bg-gray-900/5 p-4 transition-colors hover:bg-gray-900/10 cursor-pointer"
     >
       <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full">
