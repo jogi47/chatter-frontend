@@ -194,20 +194,28 @@ export default function ChatPage() {
           <ArrowLeft className="w-5 h-5 text-gray-400" />
         </button>
         {group && (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
-              <img
-                src={group.group_image}
-                alt={group.group_name}
-                className="w-full h-full object-cover"
-              />
+          <div className="flex items-center justify-between flex-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <img
+                  src={group.group_image}
+                  alt={group.group_name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h1 className="font-semibold text-gray-100">{group.group_name}</h1>
+                <p className="text-sm text-gray-400">
+                  {group.members.length} members
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-semibold text-gray-100">{group.group_name}</h1>
-              <p className="text-sm text-gray-400">
-                {group.members.length} members
-              </p>
-            </div>
+            <button
+              onClick={() => router.push(`/chat/${groupId}/members`)}
+              className="px-4 py-2 rounded-lg bg-gray-800 text-gray-100 hover:bg-gray-700 transition-colors"
+            >
+              Members
+            </button>
           </div>
         )}
       </div>

@@ -30,4 +30,17 @@ export const groupService = {
     });
     return response.data;
   },
+
+  transferOwnership: async (groupId: string, newOwnerId: string): Promise<Group> => {
+    const response = await api.post<Group>('/groups/change-owner', {
+      group_id: groupId,
+      new_owner_id: newOwnerId
+    });
+    return response.data;
+  },
+
+  leaveGroup: async (groupId: string): Promise<Group> => {
+    const response = await api.post<Group>(`/groups/leave/${groupId}`);
+    return response.data;
+  },
 }; 
