@@ -48,7 +48,10 @@ export default function HomePage() {
   };
 
   const GroupCard = ({ group }: { group: Group }) => (
-    <div className="flex items-center space-x-4 rounded-lg border border-gray-800/10 bg-gray-900/5 p-4 transition-colors hover:bg-gray-900/10">
+    <div 
+      onClick={() => router.push(`/chat/${group._id}`)}
+      className="flex items-center space-x-4 rounded-lg border border-gray-800/10 bg-gray-900/5 p-4 transition-colors hover:bg-gray-900/10 cursor-pointer"
+    >
       <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full">
         <img
           src={group.group_image}
