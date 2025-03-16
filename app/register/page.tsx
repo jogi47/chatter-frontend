@@ -299,7 +299,7 @@ export default function RegisterPage() {
             )}
           </Button>
           
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t"></span>
             </div>
@@ -324,7 +324,7 @@ export default function RegisterPage() {
               </svg>
               Facebook
             </Button>
-          </div>
+          </div> */}
           
           <div className="text-center text-sm">
             Already have an account?{' '}
