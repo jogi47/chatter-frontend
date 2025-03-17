@@ -14,6 +14,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { socketService } from '@/lib/services/socket';
+import { TypingIndicator } from '@/app/components/TypingIndicator';
+import { TypingEvent, TypingState } from '@/lib/models/typing';
+import { debounce } from 'lodash';
 
 export default function ChatPage() {
   const params = useParams();
@@ -27,6 +30,13 @@ export default function ChatPage() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const groupId = params.groupId as string;
+  const [typingUsers, setTypingUsers] = useState<TypingState>({});
+
+  const debouncedStopTyping = useRef(
+    debounce((groupId: string) => {
+      socketService.emitStopTyping(groupId);
+    }, 1000)
+  ).current;
 
   useEffect(() => {
     fetchGroupAndMessages();
@@ -60,6 +70,53 @@ export default function ChatPage() {
       }
     };
   }, [groupId, user?.id]); // Add user?.id as dependency
+
+  useEffect(() => {
+    const handleUserTyping = (data: TypingEvent) => {
+      if (data.groupId === groupId && data.userId !== user?.id) {
+        setTypingUsers(prev => ({
+          ...prev,
+          [data.userId]: {
+            username: data.username,
+            timestamp: Date.now()
+          }
+        }));
+      }
+    };
+
+    const handleUserStoppedTyping = (data: TypingEvent) => {
+      if (data.groupId === groupId && data.userId !== user?.id) {
+        setTypingUsers(prev => {
+          const newState = { ...prev };
+          delete newState[data.userId];
+          return newState;
+        });
+      }
+    };
+
+    socketService.onUserTyping(handleUserTyping);
+    socketService.onUserStoppedTyping(handleUserStoppedTyping);
+
+    // Cleanup typing indicators older than 3 seconds
+    const cleanupInterval = setInterval(() => {
+      setTypingUsers(prev => {
+        const now = Date.now();
+        const newState = { ...prev };
+        Object.entries(newState).forEach(([userId, data]) => {
+          if (now - data.timestamp > 3000) {
+            delete newState[userId];
+          }
+        });
+        return newState;
+      });
+    }, 1000);
+
+    return () => {
+      socketService.offUserTyping(handleUserTyping);
+      socketService.offUserStoppedTyping(handleUserStoppedTyping);
+      clearInterval(cleanupInterval);
+    };
+  }, [groupId, user?.id]);
 
   const fetchGroupAndMessages = async () => {
     try {
@@ -96,6 +153,16 @@ export default function ChatPage() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+    
+    if (value.length > 0) {
+      socketService.emitStartTyping(groupId);
+      debouncedStopTyping(groupId);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -236,6 +303,9 @@ export default function ChatPage() {
         )}
       </ScrollArea>
 
+      {/* Typing Indicator */}
+      <TypingIndicator typingUsers={typingUsers} />
+
       {/* Message Input */}
       <form
         onSubmit={handleSendMessage}
@@ -245,7 +315,7 @@ export default function ChatPage() {
           type="text"
           placeholder="Type a message..."
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={handleMessageChange}
           className="flex-1 bg-gray-800 border-gray-700 text-gray-100 placeholder:text-gray-500"
         />
         <Button

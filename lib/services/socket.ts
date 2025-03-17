@@ -1,9 +1,10 @@
 import { io, Socket } from 'socket.io-client';
 import { useAppStore } from '@/app/store/store';
 import { Message } from '@/lib/models/message';
+import { TypingEvent } from '@/lib/models/typing';
 
 export interface SocketEvent {
-  event: 'joinGroup' | 'leaveGroup' | 'groupMessage';
+  event: 'joinGroup' | 'leaveGroup' | 'groupMessage' | 'startTyping' | 'stopTyping';
   data: {
     groupId: string;
     message?: Message;
@@ -20,7 +21,7 @@ class SocketService {
     const token = useAppStore.getState().token;
     if (!token) return;
 
-    this.socket = io('ws://localhost:3001', {
+    this.socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'ws://localhost:3001', {
       extraHeaders: {
         'Auth': `Bearer ${token}`
       }
@@ -61,6 +62,44 @@ class SocketService {
     if (this.socket) {
       this.socket.off('groupMessage', callback);
     }
+  }
+
+  onUserTyping(callback: (data: TypingEvent) => void) {
+    if (this.socket) {
+      this.socket.on('userTyping', callback);
+    }
+  }
+
+  offUserTyping(callback: (data: TypingEvent) => void) {
+    if (this.socket) {
+      this.socket.off('userTyping', callback);
+    }
+  }
+
+  onUserStoppedTyping(callback: (data: TypingEvent) => void) {
+    if (this.socket) {
+      this.socket.on('userStoppedTyping', callback);
+    }
+  }
+
+  offUserStoppedTyping(callback: (data: TypingEvent) => void) {
+    if (this.socket) {
+      this.socket.off('userStoppedTyping', callback);
+    }
+  }
+
+  emitStartTyping(groupId: string) {
+    this.emit({
+      event: 'startTyping',
+      data: { groupId }
+    });
+  }
+
+  emitStopTyping(groupId: string) {
+    this.emit({
+      event: 'stopTyping',
+      data: { groupId }
+    });
   }
 }
 
