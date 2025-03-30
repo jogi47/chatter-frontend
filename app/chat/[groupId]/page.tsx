@@ -18,6 +18,7 @@ import { TypingIndicator } from '@/app/components/TypingIndicator';
 import { TypingEvent, TypingState } from '@/lib/models/typing';
 import { debounce } from 'lodash';
 import { SmartReplySuggestions } from '@/app/components/SmartReplySuggestions';
+import { debugApi, debugUi } from '@/lib/utils/debug';
 
 export default function ChatPage() {
   const params = useParams();
@@ -210,16 +211,24 @@ export default function ChatPage() {
   };
 
   const fetchSmartReplies = async () => {
-    console.log('fetching smart replies');
-    if (!groupId) return;
-    console.log(`Got group id and calling it: ${groupId}`);
+    if (!groupId) {
+      debugUi('Cannot fetch smart replies: missing groupId');
+      return;
+    }
+    
     try {
+      debugUi('Fetching smart replies for group:', groupId);
+      console.log('Fetching smart replies for group:', groupId);
       setIsLoadingSmartReplies(true);
+      
+      const startTime = performance.now();
       const suggestions = await messageService.getSmartReplies(groupId);
+      const duration = performance.now() - startTime;
+      
+      debugUi(`Received ${suggestions.length} smart replies in ${duration.toFixed(2)}ms`);
       setSmartReplies(suggestions);
-      console.log('Smart replies:', suggestions);
     } catch (error) {
-      console.error('Failed to fetch smart replies:', error);
+      debugUi('Failed to fetch smart replies:', error);
     } finally {
       setIsLoadingSmartReplies(false);
     }
