@@ -17,6 +17,7 @@ import { socketService } from '@/lib/services/socket';
 import { TypingIndicator } from '@/app/components/TypingIndicator';
 import { TypingEvent, TypingState } from '@/lib/models/typing';
 import { debounce } from 'lodash';
+import { SmartReplySuggestions } from '@/app/components/SmartReplySuggestions';
 
 export default function ChatPage() {
   const params = useParams();
@@ -31,6 +32,8 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const groupId = params.groupId as string;
   const [typingUsers, setTypingUsers] = useState<TypingState>({});
+  const [smartReplies, setSmartReplies] = useState<string[]>([]);
+  const [isLoadingSmartReplies, setIsLoadingSmartReplies] = useState(false);
 
   const debouncedStopTyping = useRef(
     debounce((groupId: string) => {
@@ -118,6 +121,12 @@ export default function ChatPage() {
     };
   }, [groupId, user?.id]);
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      fetchSmartReplies();
+    }
+  }, [messages.length, groupId]);
+
   const fetchGroupAndMessages = async () => {
     try {
       setIsLoading(true);
@@ -198,6 +207,30 @@ export default function ChatPage() {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const fetchSmartReplies = async () => {
+    console.log('fetching smart replies');
+    if (!groupId) return;
+    console.log(`Got group id and calling it: ${groupId}`);
+    try {
+      setIsLoadingSmartReplies(true);
+      const suggestions = await messageService.getSmartReplies(groupId);
+      setSmartReplies(suggestions);
+      console.log('Smart replies:', suggestions);
+    } catch (error) {
+      console.error('Failed to fetch smart replies:', error);
+    } finally {
+      setIsLoadingSmartReplies(false);
+    }
+  };
+
+  const handleSmartReplyClick = (suggestion: string) => {
+    setNewMessage(suggestion);
+    // Optional: Auto-send the message
+    // setTimeout(() => {
+    //   handleSendMessage(new Event('submit') as React.FormEvent);
+    // }, 100);
   };
 
   const MessageBubble = ({ message }: { message: Message }) => {
@@ -302,6 +335,12 @@ export default function ChatPage() {
           </div>
         )}
       </ScrollArea>
+
+      <SmartReplySuggestions 
+        suggestions={smartReplies}
+        onSuggestionClick={handleSmartReplyClick}
+        isLoading={isLoadingSmartReplies}
+      />
 
       {/* Typing Indicator */}
       <TypingIndicator typingUsers={typingUsers} />

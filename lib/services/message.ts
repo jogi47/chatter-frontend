@@ -1,4 +1,5 @@
 import { Message, SendMessageRequest, SendMessageResponse } from '@/lib/models/message';
+import { SmartReplyRequest, SmartReplyResponse } from '@/lib/models/smartReply';
 import { api } from './api';
 
 export const messageService = {
@@ -11,4 +12,11 @@ export const messageService = {
     const response = await api.post<SendMessageResponse>('/messages/text', data);
     return response.data;
   },
+
+  getSmartReplies: async (groupId: string): Promise<string[]> => {
+    const response = await api.post<SmartReplyResponse>('/messages/smart-replies', {
+      group_id: groupId
+    });
+    return response.data.suggestions;
+  }
 }; 
