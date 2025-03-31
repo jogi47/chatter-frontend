@@ -8,8 +8,8 @@ import '@/app/debug-settings';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Mobile First App",
-  description: "A mobile-first Next.js application",
+  title: "The Chatter",
+  description: "Chat about anything with anyone",
 };
 
 export default function RootLayout({

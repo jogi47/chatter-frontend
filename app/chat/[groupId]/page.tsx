@@ -124,7 +124,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (messages.length > 0) {
-      fetchSmartReplies();
+       fetchSmartReplies();
     }
   }, [messages.length, groupId]);
 
