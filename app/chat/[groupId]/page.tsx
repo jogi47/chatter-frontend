@@ -18,7 +18,7 @@ import { TypingIndicator } from '@/app/components/TypingIndicator';
 import { TypingEvent, TypingState } from '@/lib/models/typing';
 import { debounce } from 'lodash';
 import { SmartReplySuggestions } from '@/app/components/SmartReplySuggestions';
-import { debugApi, debugUi } from '@/lib/utils/debug';
+import { debugApi, debugSocket, debugUi } from '@/lib/utils/debug';
 
 export default function ChatPage() {
   const params = useParams();
@@ -52,10 +52,14 @@ export default function ChatPage() {
 
   useEffect(() => {
     // Handle incoming messages
-    const handleGroupMessage = (data: any) => {
-      if (data.groupId === groupId && data.message.user_id !== user?.id) {
-        console.log(`${data.message} beingcalled....`);
-        setMessages(prev => [...prev, data.message]);
+    const handleGroupMessage = (data: Message) => {
+      if (data.group_id === groupId && data.user_id !== user?.id) {
+      setMessages(prev => {
+        // Check if message already exists in the array
+        const messageExists = prev.some(msg => msg._id === data._id);
+        // Only add if message doesn't exist
+        return messageExists ? prev : [...prev, data];
+      });
       }
     };
     socketService.onGroupMessage(handleGroupMessage);
@@ -187,7 +191,9 @@ export default function ChatPage() {
         group_id: groupId,
         content: newMessage.trim(),
       });
-
+      console.log(`${response} sent for emition...`);
+      debugUi(`${response} sent for emition...`);
+      debugSocket(`${response} sent for emition...`);
       // Emit socket event
       socketService.emit({
         event: 'groupMessage',
